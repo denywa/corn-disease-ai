@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pendeteksi Penyakit Daun</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Deteksi Penyakit Daun</h1>
+
+      <div class="preview-box empty" id="preview-box">
+        <div id="placeholder-text">Kamera atau Gambar akan muncul di sini</div>
+        <div id="webcam-container"></div>
+        <div id="image-container"></div>
+      </div>
+
+      <div id="label-container">
+        <div class="output-title">Output</div>
+        <div class="prediction-item">
+          <div class="prediction-label">
+            <span class="label-name bulai">Bulai Daun</span>
+          </div>
+          <div class="prediction-bar">
+            <div class="prediction-fill bulai" style="width: 0%">0%</div>
+          </div>
+        </div>
+        <div class="prediction-item">
+          <div class="prediction-label">
+            <span class="label-name karat">Karat Daun</span>
+          </div>
+          <div class="prediction-bar">
+            <div class="prediction-fill karat" style="width: 0%">0%</div>
+          </div>
+        </div>
+        <div class="prediction-item">
+          <div class="prediction-label">
+            <span class="label-name sehat">Daun Sehat</span>
+          </div>
+          <div class="prediction-bar">
+            <div class="prediction-fill sehat" style="width: 0%">0%</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="button-container">
+        <button type="button" onclick="startCamera()">Start Kamera</button>
+        <button type="button" onclick="document.getElementById('file-input').click()">Upload Gambar</button>
+        <input type="file" id="file-input" accept="image/*" onchange="handleImageUpload(event)" />
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    <script type="text/javascript">
+      // More API functions here:
+      // https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/image
+
+      // the link to your model provided by Teachable Machine export panel
+      const URL = "https://teachablemachine.withgoogle.com/models/fMG8kEAjm/";
+
+      let model, webcam, labelContainer, maxPredictions;
+      let isWebcamRunning = false;
+
+      // Helper function to get class name for styling
+      function getClassStyle(className) {
+        const lowerName = className.toLowerCase();
+        if (lowerName.includes("bulai")) return "bulai";
+        if (lowerName.includes("karat")) return "karat";
+        if (lowerName.includes("sehat")) return "sehat";
+        return "bulai"; // default
+      }
+
+      // Function to create prediction HTML
+      function createPredictionHTML(className, probability) {
+        const classStyle = getClassStyle(className);
+        const percentage = (probability * 100).toFixed(0);
+        return `
+          <div class="prediction-item">
+            <div class="prediction-label">
+              <span class="label-name ${classStyle}">${className}</span>
+            </div>
+            <div class="prediction-bar">
+              <div class="prediction-fill ${classStyle}" style="width: ${percentage}%">
+                ${percentage}%
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Load the model
+      async function loadModel() {
+        if (!model) {
+          const modelURL = URL + "model.json";
+          const metadataURL = URL + "metadata.json";
+          model = await tmImage.load(modelURL, metadataURL);
+          maxPredictions = model.getTotalClasses();
+        }
+      }
+
+      // Start camera
+      async function startCamera() {
+        await loadModel();
+
+        // Clear image container and hide placeholder
+        document.getElementById("image-container").innerHTML = "";
+        document.getElementById("placeholder-text").style.display = "none";
+        document.getElementById("preview-box").classList.remove("empty");
+
+        // Stop webcam if already running
+        if (isWebcamRunning && webcam) {
+          webcam.stop();
+        }
+
+        // Setup webcam
+        const flip = true;
+        webcam = new tmImage.Webcam(400, 400, flip);
+        await webcam.setup();
+        await webcam.play();
+        isWebcamRunning = true;
+        window.requestAnimationFrame(loop);
+
+        // Append to DOM
+        document.getElementById("webcam-container").innerHTML = "";
+        document.getElementById("webcam-container").appendChild(webcam.canvas);
+
+        // Setup label container
+        labelContainer = document.getElementById("label-container");
+        labelContainer.innerHTML = '<div class="output-title">Output</div>';
+      }
+
+      async function loop() {
+        if (isWebcamRunning && webcam) {
+          webcam.update();
+          await predictWebcam();
+          window.requestAnimationFrame(loop);
+        }
+      }
+
+      // Predict from webcam
+      async function predictWebcam() {
+        const prediction = await model.predict(webcam.canvas);
+        let html = '<div class="output-title">Output</div>';
+        for (let i = 0; i < maxPredictions; i++) {
+          html += createPredictionHTML(prediction[i].className, prediction[i].probability);
+        }
+        labelContainer.innerHTML = html;
+      }
+
+      // Handle image upload
+      async function handleImageUpload(event) {
+        await loadModel();
+
+        // Stop webcam if running
+        if (isWebcamRunning && webcam) {
+          webcam.stop();
+          isWebcamRunning = false;
+          document.getElementById("webcam-container").innerHTML = "";
+        }
+
+        // Hide placeholder
+        document.getElementById("placeholder-text").style.display = "none";
+        document.getElementById("preview-box").classList.remove("empty");
+
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = async function (e) {
+            const img = new Image();
+            img.src = e.target.result;
+            img.onload = async function () {
+              // Display image
+              const imageContainer = document.getElementById("image-container");
+              imageContainer.innerHTML = "";
+              imageContainer.appendChild(img);
+
+              // Predict
+              await predictImage(img);
+            };
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+
+      // Predict from uploaded image
+      async function predictImage(img) {
+        const prediction = await model.predict(img);
+
+        // Setup label container
+        labelContainer = document.getElementById("label-container");
+        let html = '<div class="output-title">Output</div>';
+
+        for (let i = 0; i < maxPredictions; i++) {
+          html += createPredictionHTML(prediction[i].className, prediction[i].probability);
+        }
+        labelContainer.innerHTML = html;
+      }
+    </script>
+  </body>
+</html>
