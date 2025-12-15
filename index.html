@@ -114,9 +114,10 @@
           webcam.stop();
         }
 
-        // Setup webcam
+        // Setup webcam with environment camera (back camera) on mobile
         const flip = true;
-        webcam = new tmImage.Webcam(400, 400, flip);
+        const facingMode = window.innerWidth <= 768 ? "environment" : "user"; // Use back camera on mobile
+        webcam = new tmImage.Webcam(400, 400, flip, facingMode);
         await webcam.setup();
         await webcam.play();
         isWebcamRunning = true;
