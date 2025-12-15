@@ -6,37 +6,40 @@
 
 body {
   font-family: Arial, sans-serif;
-  min-height: 100vh;
-  overflow-x: hidden;
+  height: 100vh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 15px;
+  padding: clamp(8px, 2vw, 15px);
   text-align: center;
   background-color: #e0e0e0;
 }
 
 .container {
   background-color: white;
-  padding: 20px;
+  padding: clamp(12px, 3vw, 20px);
   border-radius: 15px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 420px;
+  max-width: min(95vw, 420px);
+  max-height: 95vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 h1 {
-  font-size: clamp(20px, 5vw, 24px);
-  margin-bottom: 15px;
+  font-size: clamp(18px, 4.5vw, 24px);
+  margin-bottom: clamp(8px, 2vw, 15px);
 }
 
 .preview-box {
   width: 100%;
-  max-width: 320px;
-  height: 0;
-  padding-bottom: 100%;
-  margin: 0 auto 15px;
+  max-width: min(90vw, 320px);
+  aspect-ratio: 1 / 1;
+  margin: 0 auto clamp(8px, 2vw, 15px);
   border: 2px dashed #ccc;
   border-radius: 10px;
   display: flex;
@@ -57,6 +60,9 @@ h1 {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  text-align: center;
+  padding: 10px;
+  max-width: 90%;
 }
 
 #webcam-container,
@@ -66,29 +72,39 @@ h1 {
   left: 0;
   width: 100%;
   height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #webcam-container canvas,
 #image-container img {
-  width: 100%;
-  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
 }
 
 .button-container {
-  margin: 15px 0;
+  margin: clamp(8px, 2vw, 15px) 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(5px, 1vw, 8px);
 }
 
 button {
-  padding: 8px 16px;
-  margin: 5px;
-  font-size: clamp(12px, 3.5vw, 14px);
+  padding: clamp(6px, 1.5vw, 8px) clamp(12px, 3vw, 16px);
+  font-size: clamp(11px, 3vw, 14px);
   cursor: pointer;
   border: none;
   border-radius: 5px;
   background-color: #4caf50;
   color: white;
-  min-width: 120px;
+  min-width: clamp(100px, 25vw, 120px);
+  flex: 1 1 auto;
+  white-space: nowrap;
 }
 
 button:hover {
@@ -102,28 +118,28 @@ button:active {
 #label-container {
   margin: 0 auto;
   width: 100%;
-  max-width: 320px;
+  max-width: min(90vw, 320px);
   text-align: left;
 }
 
 .output-title {
-  font-size: clamp(16px, 4.5vw, 18px);
+  font-size: clamp(14px, 4vw, 18px);
   font-weight: bold;
   color: #666;
-  margin-bottom: 12px;
+  margin-bottom: clamp(6px, 2vw, 12px);
   text-align: center;
 }
 
 .prediction-item {
-  margin-bottom: 10px;
+  margin-bottom: clamp(6px, 2vw, 10px);
 }
 
 .prediction-label {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 5px;
-  font-size: clamp(12px, 3.5vw, 14px);
+  margin-bottom: clamp(3px, 1vw, 5px);
+  font-size: clamp(11px, 3vw, 14px);
 }
 
 .label-name {
@@ -144,7 +160,7 @@ button:active {
 
 .prediction-bar {
   width: 100%;
-  height: clamp(22px, 6vw, 26px);
+  height: clamp(20px, 5vw, 26px);
   background-color: #f0f0f0;
   border-radius: 6px;
   overflow: hidden;
@@ -157,10 +173,10 @@ button:active {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding-right: 10px;
+  padding-right: clamp(6px, 2vw, 10px);
   color: white;
   font-weight: bold;
-  font-size: clamp(11px, 3vw, 13px);
+  font-size: clamp(10px, 2.5vw, 13px);
   border-radius: 6px;
 }
 
@@ -180,25 +196,91 @@ button:active {
   display: none;
 }
 
+.flip-btn {
+  position: absolute;
+  top: clamp(8px, 2.5vw, 12px);
+  right: clamp(8px, 2.5vw, 12px);
+  z-index: 10;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  border-radius: 50%;
+  width: clamp(45px, 12vw, 60px);
+  height: clamp(45px, 12vw, 60px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  aspect-ratio: 1 / 1;
+  color: #444;
+}
+
+.flip-btn svg {
+  width: 55%;
+  height: 55%;
+  transition: transform 0.4s ease;
+}
+
+.flip-btn:hover {
+  background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2), 0 3px 6px rgba(0, 0, 0, 0.15);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.flip-btn:hover svg {
+  transform: rotate(180deg);
+  color: #333;
+}
+
+.flip-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
 /* Media Query untuk layar kecil */
 @media (max-width: 480px) {
   body {
-    padding: 10px;
+    padding: 8px;
   }
 
   .container {
-    padding: 15px;
+    padding: 12px;
     border-radius: 10px;
+    max-height: 98vh;
   }
 
   .button-container {
-    display: flex;
     flex-direction: column;
-    gap: 5px;
   }
 
   button {
     width: 100%;
-    margin: 0;
+    max-width: none;
+  }
+
+  h1 {
+    margin-bottom: 8px;
+  }
+
+  .preview-box {
+    margin-bottom: 8px;
+  }
+}
+
+/* Media Query untuk layar sangat kecil */
+@media (max-width: 360px) {
+  .container {
+    padding: 10px;
+  }
+
+  .prediction-item {
+    margin-bottom: 5px;
+  }
+
+  .output-title {
+    margin-bottom: 5px;
   }
 }

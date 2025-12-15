@@ -62,6 +62,7 @@
 
       let model, webcam, labelContainer, maxPredictions;
       let isWebcamRunning = false;
+      let currentFacingMode = "environment"; // Default to back camera
 
       // Helper function to get class name for styling
       function getClassStyle(className) {
@@ -114,11 +115,12 @@
           webcam.stop();
         }
 
-        // Setup webcam with environment camera (back camera) on mobile
-        const flip = true;
-        const facingMode = window.innerWidth <= 768 ? "environment" : "user"; // Use back camera on mobile
-        webcam = new tmImage.Webcam(400, 400, flip, facingMode);
-        await webcam.setup();
+        // Setup webcam with back camera (environment) for mobile devices
+        const flip = false; // Don't flip for back camera
+        webcam = new tmImage.Webcam(400, 400, flip);
+
+        // Use custom constraints to force back camera on mobile
+        await webcam.setup({ facingMode: "environment" });
         await webcam.play();
         isWebcamRunning = true;
         window.requestAnimationFrame(loop);
